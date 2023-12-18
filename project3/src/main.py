@@ -77,6 +77,9 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
+    if not os.path.exists('../output'):
+        os.mkdir('../output')
+
     if 'train_df.csv' in os.listdir('../output'):
         train_df = pd.read_csv(os.path.join(args.dpath, 'train_df.csv'),
                                names=col_names_train + ['user-idx', 'item-idx'])

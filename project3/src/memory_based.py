@@ -15,7 +15,7 @@ def user_sim(R: np.ndarray, R_avg: np.ndarray, Idx_eff: np.ndarray, Sim_user: np
     # 对某个物品有共同评分的用户的打分值才能计入相似度
     #############################################
     # 为了编译写成循环
-    Score = np.zeros(len(Idx_eff))
+    Score = [0] * len(Idx_eff)
     for idx, (u, i) in enumerate(Idx_eff):
         Score[idx] = R[u, i]
     for u, i in Idx_eff:

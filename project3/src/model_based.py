@@ -25,9 +25,9 @@ def train(xdata: torch.Tensor, ydata: torch.Tensor, P: torch.Tensor, Q: torch.Te
     rmse_min = np.inf  # minimum rmse of valid set to decide best parameters
     best_paras = (P.detach(), Q.detach(), b.detach(), c.detach())
 
-    with  open('../output/running.log', 'a') as f:
-        # f.write('=' * 10 + str(datetime.datetime.now()) + '=' * 10)
-        f.write('epoch\ttrain-loss\tvalid-rmse\n')
+    f = open('../output/running.log', 'a')
+    # f.write('=' * 10 + str(datetime.datetime.now()) + '=' * 10)
+    f.write('epoch\ttrain-loss\tvalid-rmse\n')
 
     optimizer = torch.optim.Adam([P, Q, b, c], lr=lr)
 

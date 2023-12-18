@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--num_result', default=10, type=int, help='number of results (in order)')
     args = parser.parse_args()
 
-    # 文档词条化预处理
+    # documents preprocessing: tokenization, stop words removal, stemming, etc.
     if DOCUMENT_NAME not in os.listdir(args.output_path):
         document = DocumentProcessed(in_path=args.data_path)
         with open(os.path.join(args.output_path, DOCUMENT_NAME), 'wb')as f:
@@ -22,6 +22,7 @@ if __name__ == "__main__":
     else:
         with open(os.path.join(args.output_path, DOCUMENT_NAME), 'rb')as f:
             document = pickle.load(f)
+    document.attr_show()
 
     cmd = ''  # 输入检索命令 e.g. company meeting market electricity financial offer customers
     print("===============Bool retrieval system for mails===============")

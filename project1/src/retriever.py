@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import sparse
+from tqdm import tqdm
 import re
 import nltk
 import os
@@ -37,30 +38,47 @@ class DocumentProcessed:
         """
         :param in_path: 依赖数据文件目录
         """
-        print('文档预处理中。。。。')
+        print('Preprocessing text documents ...')
         for fpath, dirs, fs in os.walk(in_path):
             for fname in fs:
+                if fname.endswith('.tar.gz'):
+                    continue
                 self.files_path.append(os.path.abspath(os.path.join(fpath, fname)))
-        # ####################
-        # 暂时取前100 000文档
+
+        # since the total dataset size is too large, herein we temporarily use part of them
         self.files_path = self.files_path[:50000]
-        # ####################
+
         self.num_docs = len(self.files_path)
         self.doc_dict = {self.files_path[i]: i for i in range(len(self.files_path))}
         token_all = []
-        for fname in self.files_path:  # 遍历每个文档
-            if self.doc_dict[fname] % 10000 == 0:
-                print('正在扫描处理第{}个文档。。。。'.format(self.doc_dict[fname]))
+        for fname in tqdm(self.files_path):  # 遍历每个文档
+            # if self.doc_dict[fname] % 10000 == 0:
+            #     print('正在扫描处理第{}个文档。。。。'.format(self.doc_dict[fname]))
             with open(fname, 'r') as f:
                 try:
                     txt = f.read().lower()  # 全都小写化读取
                 except UnicodeDecodeError:
                     txt = ''  # 解码问题是由于文件存在乱码造成的，大约20多个；跳过
 
-                # 去除邮件头部
-                # message-id: 从此
-                # subject: 仅保留该行
-                # x-filename: 至此
+                # Remove email headers
+                """
+                For example, only the "subject:" line is reserved, other lines from "message-id" to "x-filename" are removed.
+                    Message-ID: <13730786.1075845382183.JavaMail.evans@thyme>
+                    Date: Fri, 18 May 2001 00:41:21 -0700 (PDT)
+                    From: vze28szx@verizon.net
+                    To: jason.wolfe@enron.com
+                    Subject: Re: Al Julson: Back from the Grave
+                    Mime-Version: 1.0
+                    Content-Type: text/plain; charset=us-ascii
+                    Content-Transfer-Encoding: 7bit
+                    X-From: "Alan Julson" <vze28szx@verizon.net>@ENRON <IMCEANOTES-+22Alan+20Julson+22+20+3Cvze28szx+40verizon+2Enet+3E+40ENRON@ENRON.com>
+                    X-To: Wolfe, Jason </O=ENRON/OU=NA/CN=RECIPIENTS/CN=JWOLFE>
+                    X-cc: 
+                    X-bcc: 
+                    X-Folder: \Wolfe, Jason\Wolfe, Jason\Inbox
+                    X-Origin: WOLFE-J
+                    X-FileName: Wolfe, Jason.pst
+                """
                 txt_lines = txt.split('\n')
                 txt_new = []
                 flag_reserve = False
@@ -89,32 +107,28 @@ class DocumentProcessed:
         token_unit.sort()
         self.token_dict = {token_unit[i]: i for i in range(len(token_unit))}  # 文档频率前1000的token按照ascii码排序
 
-        ###########
         # 构建TF稀疏矩阵(伪DataFrame)
-        print('正在构建TF稀疏矩阵。。。。')
+        print('Constructing TF sparse matrix ...')
         self.tf = sparse.csc_matrix(np.zeros([len(self.df), len(self.files_path)]))
-        for fname in self.files_path:
-            if self.doc_dict[fname] % 10000 == 0:
-                print('正根据第{}个文档构造TF矩阵。。。。'.format(self.doc_dict[fname]))
+        for fname in tqdm(self.files_path):
             words = self.documents[self.doc_dict[fname]].copy()  # 每个doc中的words里包含的token还需要取其前1000
             words = list(set(words))  # 归并
             words = [w for w in words if w in token_unit]  # 属于前1000的token
             self.documents[self.doc_dict[fname]] = words
-            self.tf[[self.token_dict[w] for w in words], np.repeat(self.doc_dict[fname], len(words))] += np.repeat(
-                1, len(words))
+            self.tf[[self.token_dict[w] for w in words], np.repeat(self.doc_dict[fname], len(words))] += np.repeat(1, len(words))
 
     def inverted_index_create(self):
         """
         三步走算法构造倒排表
         """
-        print('倒排表构造中。。。。。')
-        docID_tmp = np.array([], dtype=np.int)  # dtype: int
+        print('Constructing inverse index table ...')
+        docID_tmp = np.array([], dtype=int)  # dtype: int
         token_tmp = np.array([])  # dtype: object
 
         # 检索每篇文档，获得 < 词项，文档ID > 对，并写入临时索引 - 1
-        for i in range(self.num_docs):
+        for i in tqdm(range(self.num_docs)):
             words = self.documents[i]
-            docID_tmp = np.append(docID_tmp, [i] * len(words)).astype(np.int)
+            docID_tmp = np.append(docID_tmp, [i] * len(words)).astype(int)
             token_tmp = np.append(token_tmp, words)
 
         # 对临时索引中的词项进行排序 - 2
@@ -124,20 +138,20 @@ class DocumentProcessed:
 
         # 遍历临时索引，对于相同词项的文档ID进行合并 - 3
         self.inverted_index = {w: [] for w in self.token_dict.keys()}
-        for i in range(len(token_tmp)):  # 遍历临时索引
+        for i in tqdm(range(len(token_tmp))):  # 遍历临时索引
             self.inverted_index[token_tmp[i]].append(docID_tmp[i])
 
     def tfidf_create(self):
-        print('TF-iDF矩阵构造中。。。。。')
+        print('Constructing TF-iDF matrix ...')
         try:
             self.tfidf = self.tf.copy()  # 与TF矩阵（DataFrame）形状相同，索引名称相同（token-docName)
             tf_arr = self.tf.toarray()  # 2-D ndarray
-            df_arr = np.array(list(self.df.values()), dtype=np.float).reshape(-1, 1)  # 1/2-D ndarray
+            df_arr = np.array(list(self.df.values()), dtype=float).reshape(-1, 1)  # 1/2-D ndarray
             tf_arr[tf_arr > 0] = 1 + np.log10(tf_arr[tf_arr > 0])
             tf_arr[tf_arr == 0] = 0
             self.tfidf = sparse.csc_matrix(tf_arr * np.log10(self.num_docs / df_arr))
         except Exception as e:
-            print('TF-iDF矩阵中异常：')
+            print('Exception when constructing TF-iDF matrix')
             print(type(e), e)
 
     def attr_show(self):
@@ -145,9 +159,9 @@ class DocumentProcessed:
         显示属性数据格式等
         """
         print('Total documents:', self.num_docs)
-        print('DF长度：', len(self.df))
+        print('DF length:', len(self.df))
         print('TF Shape:', self.tf.shape)
-        print('Inverted List 长度:', len(self.inverted_index))
+        print('Inverted List length:', len(self.inverted_index))
 
 
 class Retriever:
@@ -178,7 +192,7 @@ class Retriever:
 class BoolRetriever(Retriever):
     def __init__(self, query: str):
         """
-        :param query: str类型query命令，需将其解析为suffix expression（list类型）
+        :param query: str类型query命令, 需将其解析为suffix expression (list type)
         """
         super(BoolRetriever, self).__init__(query)
         self.suffix = []
@@ -260,12 +274,12 @@ class BoolRetriever(Retriever):
         elif length <= num:
             print("Results (absolute file path) is/are:")
             for i in range(length):
-                print(self.result[i])
+                print(i + 1, self.result[i])
         else:
             print("Results (absolute file path) is/are:")
             for i in range(num):
-                print(self.result[i])
-            print('There is/are still {} results not shown'.format(length - num))
+                print(i + 1, self.result[i])
+            print('(There is/are still {} results not shown)'.format(length - num))
 
 
 class SemanticRetriever(Retriever):
@@ -315,9 +329,16 @@ class SemanticRetriever(Retriever):
         """
         :param num: 最大显示数量
         """
-        if len(self.result) == 0:
-            print("Your query has not been executed!")
+        length = len(self.result)
+        if length == 0:
+            print("There is no document satisfying your query requirement!")
+        elif length <= num:
+            print("Results (absolute file path) is/are:")
+            for i in range(length):
+                print(i + 1, self.result[i])
         else:
             print("Results (absolute file path) is/are:")
             for i in range(num):
-                print(self.result[i])
+                print(i + 1, self.result[i])
+            print('(There is/are still {} results not shown)'.format(length - num))
+
