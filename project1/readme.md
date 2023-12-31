@@ -4,7 +4,7 @@
 > 
 > date: 2020-10
 > 
-> project: one project for course "Web information processing & application" in USTC
+> project: one project for course "Web information processing & application" at USTC
 
 - 运行环境
 
@@ -15,8 +15,8 @@
 - 运行说明
 
   ```bash
-  # python bool_search.py -h，查看说明
-  # python semantic_search -h，查看说明
+  python bool_search.py -h # 查看说明
+  python semantic_search -h # 查看说明
   python bool_search # 运行布尔检索程序
   python semantic_search # 运行语义检索程序
   ```

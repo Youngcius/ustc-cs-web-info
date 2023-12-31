@@ -4,7 +4,7 @@
 > 
 > date: 2020-12
 > 
-> project: one project for course "Web information processing & application" in USTC
+> project: one project for course "Web information processing & application" at USTC
 
 - 程序使用
 
@@ -24,7 +24,7 @@
     -e EPOCH, --epoch EPOCH
                           number of epochs for optimization
     -r RATIO, --ratio RATIO
-                          ratio of the origin train set splitted for valid set
+                          ratio of the origin train set split for valid set
     -lr LR                learning rate of SGD optimization
     -lam LAM              lambda: the regularization parameter
     -f F                  dim of hidden factors

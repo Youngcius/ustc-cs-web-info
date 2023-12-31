@@ -160,3 +160,5 @@ cython_debug/
 .idea/
 .vscode/
 maildir/
+
+.DS_Store
