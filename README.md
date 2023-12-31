@@ -163,6 +163,8 @@ Named Entity Recognition task with LSTM deep learning approach.
 
 This project realized a recommending score system, using the model-based rating prediction (SVD) and memory-based rating prediction (collaborative filtering) methods, respectively.
 
+*Make sure [git-lfs](https://git-lfs.com) is installed before cloning this repository, to downloading the large training/testing dataset.*
+
 **Requirements**:
 
 ```
@@ -176,7 +178,7 @@ numba
 
 Herein "numba" library is used to accelerate calculation.
 
-Usage of the program is like (see argument details by running `python main.py -h` in [src/](./project2/src/):
+Usage of the program is like (see argument details by running `python main.py -h` in [src/](./project2/src/)):
 
 ```shell
 python main.py -svd -f 5 -lam 0.001 -n -e 6
