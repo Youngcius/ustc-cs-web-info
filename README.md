@@ -30,7 +30,7 @@ See [report](./project1/report.pdf) for detailed techniques and results.
     
     ​	Link: https://rec.ustc.edu.cn/share/12edbd70-9d61-11ee-8c53-a1517e796799 
     
-    ​	Password: 63si.
+    ​	Password: 63si
 
 ### Usage
 

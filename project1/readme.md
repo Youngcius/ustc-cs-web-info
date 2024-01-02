@@ -71,5 +71,5 @@
 
   安然公司（Enron）员工往来通讯邮件，共计 50 余万个文本文件。
 
-  已分享在USTC睿客网，链接：https://rec.ustc.edu.cn/share/01b6e370-3565-11eb-baf2-b73de2be9edb  密码：faai
+  已分享在USTC睿客网，链接：https://rec.ustc.edu.cn/share/12edbd70-9d61-11ee-8c53-a1517e796799  密码：63si
 
